@@ -1,10 +1,20 @@
-import React from 'react'
-import Firsthero from '../Mainpage/Firsthero'
+'use client';
+import React from "react";
+import AboutElab from '@/component/aboutElab'
+import HeroSection from '@/component/heropage'
+import Testimonials from '@/component/testimonials.'
+import Examprep from '@/component/Examprep'
+import WhyElab from '@/component/whyElab '
+
 
 const Home = () => {
   return (
     <div>
-        <Firsthero />
+      <HeroSection/>
+      <Testimonials/>
+      <Examprep />
+      <WhyElab />
+      <AboutElab/>
     </div>
   )
 }
