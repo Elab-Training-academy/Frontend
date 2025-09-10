@@ -8,8 +8,9 @@ export const useAuthStore = create((set, get) => ({
   url: "https://elab-server-xg5r.onrender.com",
   token: null,
   user: null,
+  role: null,
 
-
+  setRole: (role) => set({role}),
   setUser: (user) => set({ user }),
   setToken: (token) => set({ token }),
   clearToken: () => set({ token: null }),
@@ -112,30 +113,43 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Fetch user
+
+   // Fetch user + role
   fetchUser: async () => {
+    // useAuthStore.getState().setRole(response.data.role);
     const { url } = get();
     if (typeof window === "undefined") return;
-    set({ loading: true });
+
     try {
       const token = localStorage.getItem("token");
+      if (!token) return;
+
       const res = await fetch(`${url}/users/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
       if (!res.ok) {
         console.error("Failed to fetch user", res.status);
-        set({ user: null });
+        set({ user: null, role: null });
         return;
       }
+
       const data = await res.json();
-      set({ user: data });
+      console.log("Fetched user:", data);
+
+      // ✅ Assume API returns { id, name, email, role }
+
+      const role =
+    (data.role || data.user?.role || data.data?.role || "").toLowerCase();
+      console.log("Extracted role:", role);
+
+      localStorage.setItem("role", role);
+      set({ user: data, role: data.role });
     } catch (err) {
       console.error("Error fetching user:", err);
-      set({ user: null });
-    } finally {
-      set({ loading: false });
+      set({ user: null, role: null });
     }
   },
 
@@ -197,34 +211,14 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Index courses
-  fetchIndexCourses: async () => {
-    const { url } = get();
-    set({ loading: true });
-    try {
-      const res = await fetch(`${url}/index/courses`);
-      if (!res.ok) {
-        console.error("Failed to fetch index courses", res.status);
-        set({ courses: [] });
-        return;
-      }
-      const data = await res.json();
-      set({ courses: data });
-    } catch (err) {
-      console.error("Error fetching index courses:", err);
-      set({ courses: [] });
-    } finally {
-      set({ loading: false });
-    }
-  },
-
+  
   // Profile
   fetchProfile: async () => {
   const { url } = get();
   set({ loadingProfile: true });
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${url}/profile`, {
+    const res = await fetch(`${url}/users/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return set({ profile: null });
@@ -241,7 +235,7 @@ updateProfile: async (updatedData) => {
   const { url } = get();
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${url}/profile`, {
+    const res = await fetch(`${url}/users/profile`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

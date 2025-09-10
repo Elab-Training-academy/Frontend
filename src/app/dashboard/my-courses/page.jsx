@@ -34,10 +34,11 @@ const NCLEXCourseDashboard = () => {
           "https://elab-server-xg5r.onrender.com/orders/ordered-courses",
           {
             headers: { Authorization: `Bearer ${token}` },
-            mode: 'cors'
+            
           }
         );
 
+       
         if (!res.ok) {
           console.error("Failed to fetch ordered courses:", res.status);
           setCoursesOrders([]);
@@ -72,9 +73,10 @@ const NCLEXCourseDashboard = () => {
           "https://elab-server-xg5r.onrender.com/progress/courses",
           {
             headers: { Authorization: `Bearer ${token}` },
-            mode: 'cors'
+            
           }
         );
+        
 
         if (!res.ok) {
           console.error("Failed to fetch course progress:", res.status);
@@ -122,10 +124,11 @@ const NCLEXCourseDashboard = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            mode: 'cors'
+            
           }
         );
 
+        
         if (!moduleRes.ok) {
           console.error("Failed to fetch modules:", moduleRes.status);
           setModules([]);

@@ -196,17 +196,19 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import ToastWrapper from '../../component/ToastWrapper';
 
+
 // ✅ central route resolver
 function getDashboardRoute(role) {
   switch (role) {
-    case "super_admin":
     case "admin":
+      return "/elab-admin";
     case "staff":
-      return "/elab-admin"; // all admins go to admin panel
+      return "/elab-admin"; 
     default:
       return "/dashboard"; // normal user dashboard
   }
 }
+
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -230,21 +232,32 @@ const LoginPage = () => {
       });
 
       const data = await res.json();
+if (res.ok) {
+  toast.success("Login successful!");
 
-      if (res.ok) {
-        toast.success("Login successful!");
+  // save token
+  localStorage.setItem("token", data.access_token);
 
-        // ✅ Save token + role
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("role", data.role);
+  // Debug whole response
+  console.log("Full API response:", data);
 
-        if (setToken) setToken(data.access_token);
+  // Try to read role safely
+  const role =
+    (data.role || data.user?.role || data.data?.role || "").toLowerCase();
+  console.log("Extracted role:", role);
 
-        // ✅ use central role-based redirect
-        const redirectPath = getDashboardRoute(data.role);
-        router.push(redirectPath);
+  localStorage.setItem("role", role);
 
-      } else {
+  if (setToken) setToken(data.access_token);
+
+  // redirect
+  const redirectPath = getDashboardRoute(role);
+  console.log("Redirecting to:", redirectPath);
+  router.push(redirectPath);
+}
+ 
+      
+      else {
         toast.error(data.detail || "Login failed!");
       }
     } catch (error) {

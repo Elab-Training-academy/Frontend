@@ -159,19 +159,23 @@ import Link from "next/link";
 import { useAuthStore } from "../../store/authStore";
 import Navbar from "@/component/Navbar";
 import EnrollModal from "@/component/EnrollModal";
+import { useRouter } from "next/navigation";
 
 export default function ExamCategorySection() {
   const token = useAuthStore((state) => state.token);
   const setToken = useAuthStore((state) => state.setToken);
-  const courses = useAuthStore((state) => state.courses);
-  const loading = useAuthStore((state) => state.loading);
-  const fetchIndexCourses = useAuthStore((state) => state.fetchIndexCourses);
+  const url = useAuthStore((state) => state.url);
 
-  // Modal state
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Restore token if it exists
+  const router = useRouter();
+
+  // ✅ Restore token from localStorage on mount
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     if (!token && savedToken) {
@@ -179,10 +183,35 @@ export default function ExamCategorySection() {
     }
   }, [token, setToken]);
 
-  // Always fetch courses (no matter if token exists or not)
+  // Fetch courses (no token required)
   useEffect(() => {
-    fetchIndexCourses();
-  }, [fetchIndexCourses]);
+    const fetchCourses = async () => {
+      try {
+        const res = await fetch(`${url}/courses/index/courses`);
+        if (!res.ok) throw new Error("Failed to fetch courses");
+
+        const data = await res.json();
+        setCourses(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+        setError("Error loading courses");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, [url]);
+
+  // Handle Enroll button
+  const handleEnrollClick = (course) => {
+    if (!token) {
+      router.push("/login"); // redirect if not logged in
+      return;
+    }
+    setSelectedCourse(course);
+    setIsModalOpen(true);
+  };
 
   return (
     <>
@@ -193,12 +222,15 @@ export default function ExamCategorySection() {
             Select Your Exam Category
           </h2>
           <p className="text-center text-gray-600 text-sm sm:text-base md:text-lg mb-8">
-            Choose from our comprehensive selection of exam preparation courses designed to help you succeed in your healthcare career.
+            Choose from our comprehensive selection of exam preparation courses
+            designed to help you succeed in your healthcare career.
           </p>
 
           {/* States */}
           {loading ? (
             <p className="text-center text-gray-500">Loading courses...</p>
+          ) : error ? (
+            <p className="text-center text-red-500">{error}</p>
           ) : courses.length === 0 ? (
             <p className="text-center text-gray-500">No courses available.</p>
           ) : (
@@ -216,17 +248,8 @@ export default function ExamCategorySection() {
                   </p>
 
                   <div className="flex justify-between items-center">
-                    <Link
-                      href={`/index/courses/${course.id}`}
-                      className="text-sm text-blue-600 font-medium hover:underline"
-                    >
-                      View Details
-                    </Link>
                     <button
-                      onClick={() => {
-                        setSelectedCourse(course);
-                        setIsModalOpen(true);
-                      }}
+                      onClick={() => handleEnrollClick(course)}
                       className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition"
                     >
                       Enroll
@@ -239,7 +262,7 @@ export default function ExamCategorySection() {
         </div>
       </section>
 
-      {/* Enroll Modal */}
+      {/* Enroll Modal (only opens if logged in) */}
       <EnrollModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

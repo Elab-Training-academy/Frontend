@@ -42,17 +42,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [isOpen]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
 
-    if (!token) {
-      router.replace("/login");
-    } else if (role === "staff" || role === "super-admin") {
-      setAllowed(true); // ✅ allow staff & super-admin
-    } else {
-      router.replace("/dashboard"); // 👈 kick normal users out
-    }
-  }, [router]);
+  const adminRoles = ["admin", "staff"];
+
+  if (!token) {
+    router.replace("/login");
+  } else if (adminRoles.includes(role as string)) {
+    setAllowed(true);
+  } else {
+    router.replace("/dashboard");
+  }
+}, [router]);
+
 
   if (!allowed) return null; // while checking
 

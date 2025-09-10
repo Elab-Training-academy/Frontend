@@ -240,7 +240,7 @@
 
 
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import img1 from "../../src/image/logo.png";
@@ -269,7 +269,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
-// 🔹 Menu definitions
+// 🔹 Full Admin menu (Admin gets everything here)
 const adminLinks = [
   { name: "Overview", href: "/elab-admin", icon: LayoutDashboard },
   { name: "Course Management", href: "/elab-admin/courses", icon: BookOpen },
@@ -277,9 +277,6 @@ const adminLinks = [
   { name: "Smart Practice", href: "/elab-admin/practice", icon: PlayCircle },
   { name: "Case Studies", href: "/elab-admin/case-studies", icon: FileText },
   { name: "Flashcards", href: "/elab-admin/flashcards", icon: Layers },
-];
-
-const superAdminExtraLinks = [
   { name: "User Management", href: "/elab-admin/users", icon: Users },
   { name: "Subscription Management", href: "/elab-admin/subscription", icon: CreditCard },
   { name: "Analytics", href: "/elab-admin/analytics", icon: BarChart },
@@ -297,17 +294,27 @@ const superAdminExtraLinks = [
   },
 ];
 
+// 🔹 Staff menu (limited)
+const staffLinks = [
+  { name: "Overview", href: "/elab-admin", icon: LayoutDashboard },
+  { name: "Course Management", href: "/elab-admin/courses", icon: BookOpen },
+  { name: "Question Bank", href: "/elab-admin/questions", icon: HelpCircle },
+  { name: "Smart Practice", href: "/elab-admin/practice", icon: PlayCircle },
+  { name: "Case Studies", href: "/elab-admin/case-studies", icon: FileText },
+  { name: "Flashcards", href: "/elab-admin/flashcards", icon: Layers },
+];
+
 export default function Sidebar({ onClose }) {
   const pathname = usePathname();
   const router = useRouter();
   const [openMenu, setOpenMenu] = useState(null);
 
-  const user = useAuthStore((state) => state.role);
 
+const role = localStorage.getItem("role")
 
-  // Super Admin gets everything
-    const links = user?.role === "super_admin" ? menuItems : adminLinks;
+  console.log("Sidebar Role:", role); // ✅ Debug
 
+  const links = role === "admin" ? adminLinks : staffLinks;
 
   const handleClose = () => {
     if (typeof onClose === "function") onClose();
@@ -325,29 +332,23 @@ export default function Sidebar({ onClose }) {
         .replace(/^ +/, "")
         .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
     });
-    router.replace("/login"); // 🚀 use router.replace so back button doesn’t go to dashboard
+    router.replace("/login");
   };
 
   return (
     <aside className="w-70 h-screen overflow-y-auto bg-white border-r p-4 flex flex-col">
-      {/* Header with Logo + Close */}
+      {/* Header */}
       <div className="p-4 flex items-center justify-between border-b border-gray-200">
-          <Link href="/" onClick={handleClose}>
-            <Image 
-              src={img1} 
-              alt="ELAB Logo" 
-              className="w-[120px] h-auto cursor-pointer" 
-              priority 
-            />
-          </Link>
-          <button
-            onClick={handleClose}
-            className="lg:hidden p-1 rounded-md hover:bg-gray-100 transition-colors"
-            aria-label="Close navigation menu"
-          >
-            <X size={20} className="text-gray-600" />
-          </button>
-        </div>
+        <Link href="/" onClick={handleClose}>
+          <Image src={img1} alt="ELAB Logo" className="w-[120px] h-auto cursor-pointer" priority />
+        </Link>
+        <button
+          onClick={handleClose}
+          className="lg:hidden p-1 rounded-md hover:bg-gray-100 transition-colors"
+        >
+          <X size={20} className="text-gray-600" />
+        </button>
+      </div>
 
       {/* Menu */}
       <nav className="space-y-1 mt-4 flex-1 overflow-y-auto">
@@ -369,11 +370,7 @@ export default function Sidebar({ onClose }) {
                     <Icon size={18} className={isOpen ? "text-blue-600" : "text-gray-500"} />
                     <span className="text-sm font-medium">{item.name}</span>
                   </div>
-                  {isOpen ? (
-                    <ChevronDown size={16} className="text-gray-500" />
-                  ) : (
-                    <ChevronRight size={16} className="text-gray-500" />
-                  )}
+                  {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 </button>
                 {isOpen && (
                   <div className="ml-6 mt-1 space-y-1">
@@ -391,7 +388,7 @@ export default function Sidebar({ onClose }) {
                               : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                           }`}
                         >
-                          <SubIcon size={16} className="text-gray-400" />
+                          <SubIcon size={16} />
                           <span>{sub.name}</span>
                         </Link>
                       );
@@ -405,9 +402,9 @@ export default function Sidebar({ onClose }) {
           return (
             <Link key={i} href={item.href} onClick={handleNavigation} className="block">
               <div
-                className={`mx-2 flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                className={`mx-2 flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                   isActive
-                    ? "bg-blue-100 text-blue-600 shadow-sm border-l-4 border-blue-500"
+                    ? "bg-blue-100 text-blue-600 border-l-4 border-blue-500"
                     : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                 }`}
               >
@@ -431,7 +428,7 @@ export default function Sidebar({ onClose }) {
           <span className="text-sm font-medium">Settings</span>
         </Link>
         <button
-          className="w-full flex items-center gap-3 px-4 py-3 text-red-500 font-medium hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+          className="w-full flex items-center gap-3 px-4 py-3 text-red-500 font-medium hover:text-red-600 hover:bg-red-50 rounded-lg"
           onClick={handleLogout}
         >
           <LogOut size={18} />
@@ -439,7 +436,7 @@ export default function Sidebar({ onClose }) {
         </button>
 
         {/* User Info */}
-        {user && (
+        {/* {user && (
           <div className="flex items-center gap-2 mt-4">
             <img src="/profile.jpg" alt="user" className="w-8 h-8 rounded-full" />
             <div>
@@ -448,7 +445,7 @@ export default function Sidebar({ onClose }) {
               <p className="text-xs text-gray-400 capitalize">{user.role}</p>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </aside>
   );
