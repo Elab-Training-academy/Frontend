@@ -1,206 +1,308 @@
-"use client";
-import React, { useState } from "react";
-import { Search, Bell } from "lucide-react";
+// "use client";
 
-const SmartPractice = () => {
-  const [questionType, setQuestionType] = useState("Mixed Practice");
-  const [courseCategories, setCourseCategories] = useState([
-    "All",
-    "Medicine and Surgery",
-  ]);
-  const [difficulty, setDifficulty] = useState("Medium");
-  const [searchQuery, setSearchQuery] = useState("");
+// import { useEffect, useState } from "react";
+// import { useQuestionStore, setToken } from "@/store/questionStore";
 
-  const questionTypes = ["Mixed Practice", "Fill in the gap", "Multiple choice"];
-  const categories = [
-    "All",
-    "Medicine and Surgery",
-    "Basic Sciences",
-    "Clinical Skills",
-    "Pharmacology",
-  ];
-  const difficulties = ["Easy", "Medium", "Hard"];
+// const SmartPracticePage = () => {
+//   const {
+//     categories,
+//     questions,
+//     currentIndex,
+//     fetchQuestions,
+//     nextQuestion,
+//     prevQuestion,
+//     loading,
+//     error,
+//     clearError,
+//   } = useQuestionStore();
 
-  const toggleCategory = (category) => {
-    if (category === "All") {
-      setCourseCategories(["All"]);
-    } else {
-      const filtered = courseCategories.filter((c) => c !== "All");
-      if (courseCategories.includes(category)) {
-        const newCategories = filtered.filter((c) => c !== category);
-        setCourseCategories(newCategories.length === 0 ? ["All"] : newCategories);
-      } else {
-        setCourseCategories([...filtered, category]);
-      }
-    }
-  };
+//   const [filters, setFilters] = useState({
+//     type: "Mixed Practice",
+//     category: "All",
+//     difficulty: "Easy",
+//     search: "",
+//   });
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center flex-1">
-              <div className="relative flex-1 max-w-lg">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Type a command or search..."
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-            <div className="flex items-center ml-4">
-              <button className="p-2 text-gray-400 hover:text-gray-500 relative">
-                <Bell className="h-6 w-6" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+//   const [authStatus, setAuthStatus] = useState("checking");
+//   const [courses, setCourses] = useState([]);
+//   const [selectedCourse, setSelectedCourse] = useState(null);
+//   const [courseCategories, setCourseCategories] = useState([]);
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <p className="text-gray-600 mb-2">Hi Ibrahim,</p>
-          <h1 className="text-4xl font-bold text-gray-900">Smart Practice</h1>
-        </div>
+//   // ✅ Step 1: Get ordered courses
+//   useEffect(() => {
+//     const init = async () => {
+//       try {
+//         const token = localStorage.getItem("token");
+//         if (!token) {
+//           setAuthStatus("unauthenticated");
+//           return;
+//         }
 
-        {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search question by keyword"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-3 py-4 border border-gray-300 rounded-xl text-lg leading-6 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-            />
-          </div>
-        </div>
+//         setToken(token);
+//         setAuthStatus("authenticated");
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Instructions */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm p-8 h-fit">
-              <div className="text-center mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Search and Select the question type that interests you most.
-                </h2>
-                <p className="text-gray-600 leading-relaxed">
-                  This choice helps us customize your practice session so it
-                  matches your pace, skills, and learning objectives.
-                </p>
-              </div>
+//         const res = await fetch(
+//           "https://elab-server-xg5r.onrender.com/orders/ordered-courses",
+//           {
+//             headers: { Authorization: `Bearer ${token}` },
+//           }
+//         );
 
-              <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-4 px-6 rounded-xl transition-colors duration-200">
-                Start Practice
-              </button>
-            </div>
-          </div>
+//         if (!res.ok) {
+//           console.error("Failed to fetch ordered courses");
+//           return;
+//         }
 
-          {/* Right Column - Selection Options */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Question Type Selection */}
-            <div className="bg-white rounded-2xl shadow-sm p-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-                Select Question Type
-              </h3>
-              <div className="flex flex-wrap gap-3 justify-center">
-                {questionTypes.map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setQuestionType(type)}
-                    className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
-                      questionType === type
-                        ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
-            </div>
+//         const userCourses = await res.json();
+//         setCourses(userCourses);
 
-            {/* Course Categories Selection */}
-            <div className="bg-white rounded-2xl shadow-sm p-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-                Select Course Categories
-              </h3>
-              <div className="flex flex-wrap gap-3 justify-center">
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => toggleCategory(category)}
-                    className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
-                      courseCategories.includes(category)
-                        ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-            </div>
+//         // auto-select first course if available
+//         if (userCourses.length > 0) {
+//           setSelectedCourse(userCourses[0].id);
+//         }
+//       } catch (err) {
+//         console.error("Error initializing SmartPractice:", err);
+//       }
+//     };
 
-            {/* Difficulty Level Selection */}
-            <div className="bg-white rounded-2xl shadow-sm p-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-                Select Difficulty Level
-              </h3>
-              <div className="flex gap-3 justify-center">
-                {difficulties.map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => setDifficulty(level)}
-                    className={`px-8 py-3 rounded-full font-medium transition-all duration-200 ${
-                      difficulty === level
-                        ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+//     init();
+//   }, []);
 
-        {/* Selected Options Summary */}
-        <div className="mt-8 bg-white rounded-2xl shadow-sm p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">
-            Current Selection:
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-gray-700">Question Type:</span>
-              <span className="ml-2 text-gray-900">{questionType}</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Categories:</span>
-              <span className="ml-2 text-gray-900">
-                {courseCategories.join(", ")}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Difficulty:</span>
-              <span className="ml-2 text-gray-900">{difficulty}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+//   // ✅ Step 2: Fetch categories when selectedCourse changes
+//   useEffect(() => {
+//     const fetchCategoriesForCourse = async () => {
+//       if (!selectedCourse) return;
+//       try {
+//         const token = localStorage.getItem("token");
+//         const res = await fetch(
+//           `https://elab-server-xg5r.onrender.com/course-categories/${selectedCourse}/categories`,
+//           {
+//             headers: { Authorization: `Bearer ${token}` },
+//           }
+//         );
+//         if (res.ok) {
+//           const cats = await res.json();
+//           setCourseCategories(cats);
+//         } else {
+//           console.error("Failed to fetch categories for course:", selectedCourse);
+//           setCourseCategories([]);
+//         }
+//       } catch (err) {
+//         console.error("Error fetching categories:", err);
+//         setCourseCategories([]);
+//       }
+//     };
 
-export default SmartPractice;
+//     fetchCategoriesForCourse();
+//   }, [selectedCourse]);
+
+//   const handleGetQuestions = async () => {
+//     clearError();
+//     await fetchQuestions(filters);
+//   };
+
+//   const handleFilterChange = (key, value) => {
+//     setFilters((prev) => ({
+//       ...prev,
+//       [key]: value,
+//     }));
+//   };
+
+//   // ================== UI ==================
+//   if (authStatus === "checking") {
+//     return <div className="p-4">Checking authentication...</div>;
+//   }
+
+//   if (authStatus === "unauthenticated") {
+//     return (
+//       <div className="p-4">
+//         <h1 className="text-xl font-bold text-red-600">Authentication Required</h1>
+//         <p>Please log in to access Smart Practice.</p>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="p-4 max-w-4xl mx-auto">
+//       <h1 className="text-2xl font-bold mb-6">Smart Practice</h1>
+
+//       {/* Loading / Error */}
+//       {loading && <p className="text-blue-600 mb-4">Loading...</p>}
+//       {error && (
+//         <div className="bg-red-50 border border-red-200 p-4 rounded-lg mb-4">
+//           <p className="text-red-700 font-semibold">Error: {error}</p>
+//           <button
+//             onClick={clearError}
+//             className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+//           >
+//             Dismiss
+//           </button>
+//         </div>
+//       )}
+
+//       {/* Course Selection */}
+//       {courses.length > 0 && (
+//         <div className="bg-white shadow rounded-lg p-6 mb-6">
+//           <label className="block text-sm font-medium mb-2">Select Course</label>
+//           <select
+//             value={selectedCourse || ""}
+//             onChange={(e) => setSelectedCourse(e.target.value)}
+//             className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+//           >
+//             {courses.map((course) => (
+//               <option key={course.id} value={course.id}>
+//                 {course.title || `Course ${course.id}`}
+//               </option>
+//             ))}
+//           </select>
+//         </div>
+//       )}
+
+//       {/* Filters Section */}
+//       <div className="bg-white shadow rounded-lg p-6 mb-6">
+//         <h2 className="text-lg font-semibold mb-4">Quiz Filters</h2>
+
+//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+//           {/* Type Filter */}
+//           <div>
+//             <label className="block text-sm font-medium mb-2">Type</label>
+//             <select
+//               value={filters.type}
+//               onChange={(e) => handleFilterChange("type", e.target.value)}
+//               className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+//             >
+//               <option value="Mixed Practice">Mixed Practice</option>
+//               <option value="Focused Practice">Focused Practice</option>
+//               <option value="Mock Exam">Mock Exam</option>
+//             </select>
+//           </div>
+
+//           {/* Category Filter */}
+//           <div>
+//             <label className="block text-sm font-medium mb-2">Category</label>
+//             <select
+//               value={filters.category}
+//               onChange={(e) => handleFilterChange("category", e.target.value)}
+//               className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+//               disabled={courseCategories.length === 0}
+//             >
+//               <option value="All">All Categories</option>
+//               {courseCategories.map((c) => (
+//                 <option key={c.id} value={c.id}>
+//                   {c.name || c.title || `Category ${c.id}`}
+//                 </option>
+//               ))}
+//             </select>
+//           </div>
+
+//           {/* Difficulty Filter */}
+//           <div>
+//             <label className="block text-sm font-medium mb-2">Difficulty</label>
+//             <select
+//               value={filters.difficulty}
+//               onChange={(e) => handleFilterChange("difficulty", e.target.value)}
+//               className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+//             >
+//               <option value="Easy">Easy</option>
+//               <option value="Medium">Medium</option>
+//               <option value="Hard">Hard</option>
+//               <option value="Mixed">Mixed</option>
+//             </select>
+//           </div>
+
+//           {/* Search Filter */}
+//           <div>
+//             <label className="block text-sm font-medium mb-2">Search</label>
+//             <input
+//               type="text"
+//               value={filters.search}
+//               onChange={(e) => handleFilterChange("search", e.target.value)}
+//               placeholder="Search questions..."
+//               className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+//             />
+//           </div>
+//         </div>
+
+//         {/* Get Questions Button */}
+//         <button
+//           onClick={handleGetQuestions}
+//           disabled={loading}
+//           className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+//         >
+//           {loading ? "Loading Questions..." : "Get Questions"}
+//         </button>
+//       </div>
+
+//       {/* Show Categories */}
+//       {courseCategories.length > 0 && (
+//         <div className="bg-white shadow rounded-lg p-6 mb-6">
+//           <h2 className="text-lg font-semibold mb-4">
+//             Available Categories ({courseCategories.length})
+//           </h2>
+//           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+//             {courseCategories.map((c) => (
+//               <div key={c.id} className="p-2 bg-gray-50 rounded border">
+//                 <span className="text-sm font-medium">
+//                   {c.name || c.title || `Category ${c.id}`}
+//                 </span>
+//               </div>
+//             ))}
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Show Questions */}
+//       {questions.length > 0 && (
+//         <div className="bg-white shadow rounded-lg p-6">
+//           <h2 className="text-lg font-semibold mb-4">
+//             Questions ({questions.length} found)
+//           </h2>
+
+//           <div className="bg-gray-50 p-4 rounded-lg">
+//             <h3 className="font-medium mb-2">
+//               Question {currentIndex + 1} of {questions.length}
+//             </h3>
+//             <p className="text-gray-700 mb-4">
+//               {questions[currentIndex]?.question ||
+//                 questions[currentIndex]?.text ||
+//                 questions[currentIndex]?.questionText ||
+//                 "Question text not available"}
+//             </p>
+
+//             {/* Show options */}
+//             {questions[currentIndex]?.options && (
+//               <div className="space-y-2">
+//                 {questions[currentIndex].options.map((option, i) => (
+//                   <div key={i} className="p-2 bg-white rounded border">
+//                     <span className="text-sm">{option}</span>
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+
+//             <div className="flex gap-2 mt-4">
+//               <button
+//                 onClick={prevQuestion}
+//                 disabled={currentIndex === 0}
+//                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+//               >
+//                 Previous
+//               </button>
+//               <button
+//                 onClick={nextQuestion}
+//                 disabled={currentIndex === questions.length - 1}
+//                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+//               >
+//                 Next
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default SmartPracticePage;
+ 
+

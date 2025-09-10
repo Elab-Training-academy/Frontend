@@ -322,7 +322,45 @@ updateProfile: async (updatedData) => {
   } finally {
     set({ loading: false });
   }
-}
+},
+    // getQuestions of smart practice for usr
+
+
+    
+  getQuestions: async (filters = {}) => {
+  const url = get().url;
+  const token = get().token;
+
+  try {
+    set({ loading: true });
+
+    const query = new URLSearchParams(filters).toString();
+    const response = await fetch(`${url}/sp-questions/filter/questions?${query}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+
+      set({ questions: data.questions || [] });
+
+      return data;
+    } else {
+      console.error("Failed to fetch questions:", response.status);
+      return null;
+    }
+  } catch (err) {
+    console.error("Error fetching questions:", err);
+    return null;
+  } finally {
+    set({ loading: false });
+  }
+},
+
 
 
 }));

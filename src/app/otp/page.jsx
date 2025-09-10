@@ -164,7 +164,7 @@ const OtpVerificationPage = ({ searchParams }) => {
       if (res.ok) {
         toast.success("OTP verified successfully!");
         setTimeout(() => {
-          router.push(`/resetpassword?email=${encodeURIComponent(email)}`);
+          router.push(`/reset-password?email=${encodeURIComponent(email)}`);
         }, 1500);
       } else {
         toast.error("Invalid OTP");

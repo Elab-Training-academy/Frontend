@@ -271,14 +271,14 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
   const [imageError, setImageError] = useState(false);
-  const [loadingProfile, setLoadingProfile] = useState(false); // ✅ local loading state
+  const [loadingProfile, setLoadingProfile] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   const profile = useAuthStore((state) => state.profile);
   const fetchProfile = useAuthStore((state) => state.fetchProfile);
 
-  // fetch profile when navbar mounts
+
   useEffect(() => {
     const getProfile = async () => {
       if (fetchProfile) {
@@ -295,7 +295,7 @@ const Navbar = () => {
     getProfile();
   }, [fetchProfile]);
 
-  
+
   useEffect(() => {
     setImageError(false);
   }, [profile?.profile_picture, profile?.profilePicture, profile?.avatar]);
