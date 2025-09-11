@@ -1,7 +1,7 @@
 // "use client";
 
 // import { useEffect, useState } from "react";
-// import { useQuestionStore, setToken } from "@/store/questionStore";
+// import { useQuestionStore, setToken } from "@/store/";
 
 // const SmartPracticePage = () => {
 //   const {
