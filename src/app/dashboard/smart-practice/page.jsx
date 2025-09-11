@@ -1,308 +1,369 @@
-// "use client";
 
-// import { useEffect, useState } from "react";
-// import { useQuestionStore, setToken } from "@/store/";
+"use client";
+import React, { useState, useEffect } from "react";
+import { useAuthStore } from "@/store/authStore";
 
-// const SmartPracticePage = () => {
-//   const {
-//     categories,
-//     questions,
-//     currentIndex,
-//     fetchQuestions,
-//     nextQuestion,
-//     prevQuestion,
-//     loading,
-//     error,
-//     clearError,
-//   } = useQuestionStore();
+const SmartPractice = () => {
+  const [questionType, setQuestionType] = useState("Mixed Practice");
+  const [courseCategories, setCourseCategories] = useState(["All"]);
+  const [categories, setCategories] = useState([]);
+  const [difficulty, setDifficulty] = useState("Medium");
+  const [loadingCourses, setLoadingCourses] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [questions, setQuestions] = useState([]);
+  const [answers, setAnswers] = useState({});
+  const [results, setResults] = useState({});
 
-//   const [filters, setFilters] = useState({
-//     type: "Mixed Practice",
-//     category: "All",
-//     difficulty: "Easy",
-//     search: "",
-//   });
+  const url = useAuthStore((state) => state.url);
 
-//   const [authStatus, setAuthStatus] = useState("checking");
-//   const [courses, setCourses] = useState([]);
-//   const [selectedCourse, setSelectedCourse] = useState(null);
-//   const [courseCategories, setCourseCategories] = useState([]);
+  const questionTypes = ["Mixed Practice", "Fill in the gap", "Multiple choice"];
+  const difficulties = ["Easy", "Medium", "Hard"];
 
-//   // ✅ Step 1: Get ordered courses
-//   useEffect(() => {
-//     const init = async () => {
-//       try {
-//         const token = localStorage.getItem("token");
-//         if (!token) {
-//           setAuthStatus("unauthenticated");
-//           return;
-//         }
+  // Mappers
+  const difficultyMap = { Easy: "easy", Medium: "medium", Hard: "hard" };
+  const questionTypeMap = {
+    "Mixed Practice": "mixed",
+    "Fill in the gap": "fill_gap",
+    "Multiple choice": "single_choice",
+  };
 
-//         setToken(token);
-//         setAuthStatus("authenticated");
+  // ✅ Fetch courses
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
-//         const res = await fetch(
-//           "https://elab-server-xg5r.onrender.com/orders/ordered-courses",
-//           {
-//             headers: { Authorization: `Bearer ${token}` },
-//           }
-//         );
+        const res = await fetch(`${url}/orders/ordered-courses`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-//         if (!res.ok) {
-//           console.error("Failed to fetch ordered courses");
-//           return;
-//         }
+        if (!res.ok) {
+          console.error("Failed to fetch courses:", res.status);
+          return;
+        }
 
-//         const userCourses = await res.json();
-//         setCourses(userCourses);
+        const data = await res.json();
+        const courseList = Array.isArray(data) ? data : data.courses || [];
+        setCourses(courseList);
 
-//         // auto-select first course if available
-//         if (userCourses.length > 0) {
-//           setSelectedCourse(userCourses[0].id);
-//         }
-//       } catch (err) {
-//         console.error("Error initializing SmartPractice:", err);
-//       }
-//     };
+        if (courseList.length > 0) {
+          setSelectedCourse(courseList[0].course_id || courseList[0].id);
+        }
+      } catch (err) {
+        console.error("Error fetching courses:", err);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
 
-//     init();
-//   }, []);
+    fetchCourses();
+  }, [url]);
 
-//   // ✅ Step 2: Fetch categories when selectedCourse changes
-//   useEffect(() => {
-//     const fetchCategoriesForCourse = async () => {
-//       if (!selectedCourse) return;
-//       try {
-//         const token = localStorage.getItem("token");
-//         const res = await fetch(
-//           `https://elab-server-xg5r.onrender.com/course-categories/${selectedCourse}/categories`,
-//           {
-//             headers: { Authorization: `Bearer ${token}` },
-//           }
-//         );
-//         if (res.ok) {
-//           const cats = await res.json();
-//           setCourseCategories(cats);
-//         } else {
-//           console.error("Failed to fetch categories for course:", selectedCourse);
-//           setCourseCategories([]);
-//         }
-//       } catch (err) {
-//         console.error("Error fetching categories:", err);
-//         setCourseCategories([]);
-//       }
-//     };
+  // ✅ Fetch categories
+  useEffect(() => {
+    if (!selectedCourse) return;
 
-//     fetchCategoriesForCourse();
-//   }, [selectedCourse]);
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
-//   const handleGetQuestions = async () => {
-//     clearError();
-//     await fetchQuestions(filters);
-//   };
+        const res = await fetch(
+          `${url}/course-categories/${selectedCourse}/categories`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-//   const handleFilterChange = (key, value) => {
-//     setFilters((prev) => ({
-//       ...prev,
-//       [key]: value,
-//     }));
-//   };
+        if (!res.ok) throw new Error(`Failed categories: ${res.status}`);
+        const data = await res.json();
+        setCategories(data);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
 
-//   // ================== UI ==================
-//   if (authStatus === "checking") {
-//     return <div className="p-4">Checking authentication...</div>;
-//   }
+    fetchCategories();
+  }, [selectedCourse, url]);
 
-//   if (authStatus === "unauthenticated") {
-//     return (
-//       <div className="p-4">
-//         <h1 className="text-xl font-bold text-red-600">Authentication Required</h1>
-//         <p>Please log in to access Smart Practice.</p>
-//       </div>
-//     );
-//   }
+  const toggleCategory = (category) => {
+    if (category === "All") {
+      setCourseCategories(["All"]);
+    } else {
+      const filtered = courseCategories.filter((c) => c !== "All");
+      if (courseCategories.includes(category)) {
+        const newCategories = filtered.filter((c) => c !== category);
+        setCourseCategories(newCategories.length === 0 ? ["All"] : newCategories);
+      } else {
+        setCourseCategories([...filtered, category]);
+      }
+    }
+  };
 
-//   return (
-//     <div className="p-4 max-w-4xl mx-auto">
-//       <h1 className="text-2xl font-bold mb-6">Smart Practice</h1>
+  // ✅ Fetch questions
+  const startPractice = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return alert("Please login");
 
-//       {/* Loading / Error */}
-//       {loading && <p className="text-blue-600 mb-4">Loading...</p>}
-//       {error && (
-//         <div className="bg-red-50 border border-red-200 p-4 rounded-lg mb-4">
-//           <p className="text-red-700 font-semibold">Error: {error}</p>
-//           <button
-//             onClick={clearError}
-//             className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
-//           >
-//             Dismiss
-//           </button>
-//         </div>
-//       )}
+      const selectedCategoryName = courseCategories.find((c) => c !== "All");
+      const selectedCategoryObj = categories.find((c) => c.name === selectedCategoryName);
 
-//       {/* Course Selection */}
-//       {courses.length > 0 && (
-//         <div className="bg-white shadow rounded-lg p-6 mb-6">
-//           <label className="block text-sm font-medium mb-2">Select Course</label>
-//           <select
-//             value={selectedCourse || ""}
-//             onChange={(e) => setSelectedCourse(e.target.value)}
-//             className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-//           >
-//             {courses.map((course) => (
-//               <option key={course.id} value={course.id}>
-//                 {course.title || `Course ${course.id}`}
-//               </option>
-//             ))}
-//           </select>
-//         </div>
-//       )}
+      const payload = {
+        course_id: selectedCourse,
+        difficulty: difficultyMap[difficulty],
+        question_type: questionTypeMap[questionType],
+        course_category_id: selectedCategoryObj?.id || null,
+      };
 
-//       {/* Filters Section */}
-//       <div className="bg-white shadow rounded-lg p-6 mb-6">
-//         <h2 className="text-lg font-semibold mb-4">Quiz Filters</h2>
+      const res = await fetch(`${url}/sp-questions/filter/questions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-//           {/* Type Filter */}
-//           <div>
-//             <label className="block text-sm font-medium mb-2">Type</label>
-//             <select
-//               value={filters.type}
-//               onChange={(e) => handleFilterChange("type", e.target.value)}
-//               className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-//             >
-//               <option value="Mixed Practice">Mixed Practice</option>
-//               <option value="Focused Practice">Focused Practice</option>
-//               <option value="Mock Exam">Mock Exam</option>
-//             </select>
-//           </div>
+      if (!res.ok) throw new Error(`Failed to fetch questions: ${res.status}`);
+      const data = await res.json();
+      setQuestions(data);
+      setAnswers({});
+      setResults({});
+    } catch (err) {
+      console.error("Error starting practice:", err);
+    }
+  };
 
-//           {/* Category Filter */}
-//           <div>
-//             <label className="block text-sm font-medium mb-2">Category</label>
-//             <select
-//               value={filters.category}
-//               onChange={(e) => handleFilterChange("category", e.target.value)}
-//               className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-//               disabled={courseCategories.length === 0}
-//             >
-//               <option value="All">All Categories</option>
-//               {courseCategories.map((c) => (
-//                 <option key={c.id} value={c.id}>
-//                   {c.name || c.title || `Category ${c.id}`}
-//                 </option>
-//               ))}
-//             </select>
-//           </div>
+const submitAnswer = async (questionId) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Please login");
 
-//           {/* Difficulty Filter */}
-//           <div>
-//             <label className="block text-sm font-medium mb-2">Difficulty</label>
-//             <select
-//               value={filters.difficulty}
-//               onChange={(e) => handleFilterChange("difficulty", e.target.value)}
-//               className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-//             >
-//               <option value="Easy">Easy</option>
-//               <option value="Medium">Medium</option>
-//               <option value="Hard">Hard</option>
-//               <option value="Mixed">Mixed</option>
-//             </select>
-//           </div>
+    const q = questions.find((x) => x.id === questionId);
+    let payload = { question_id: questionId };
 
-//           {/* Search Filter */}
-//           <div>
-//             <label className="block text-sm font-medium mb-2">Search</label>
-//             <input
-//               type="text"
-//               value={filters.search}
-//               onChange={(e) => handleFilterChange("search", e.target.value)}
-//               placeholder="Search questions..."
-//               className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-//             />
-//           </div>
-//         </div>
+    if (q.question_type === "fill_gap") {
+  const userText = (answers[questionId] || "").trim().toLowerCase();
 
-//         {/* Get Questions Button */}
-//         <button
-//           onClick={handleGetQuestions}
-//           disabled={loading}
-//           className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-//         >
-//           {loading ? "Loading Questions..." : "Get Questions"}
-//         </button>
-//       </div>
+  // try to find matching answer id
+  const matchedAnswer = q.answers.find(
+    (a) => a.answer.trim().toLowerCase() === userText
+  );
 
-//       {/* Show Categories */}
-//       {courseCategories.length > 0 && (
-//         <div className="bg-white shadow rounded-lg p-6 mb-6">
-//           <h2 className="text-lg font-semibold mb-4">
-//             Available Categories ({courseCategories.length})
-//           </h2>
-//           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-//             {courseCategories.map((c) => (
-//               <div key={c.id} className="p-2 bg-gray-50 rounded border">
-//                 <span className="text-sm font-medium">
-//                   {c.name || c.title || `Category ${c.id}`}
-//                 </span>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       )}
+  payload = {
+    question_id: questionId,
+    selected_answer_ids: matchedAnswer ? [matchedAnswer.id] : null, // null instead of []
+    text_answer: answers[questionId] || "",
+  };
+  } else {
+      // multiple choice
+      const selectedIds = answers[questionId] ? [answers[questionId]] : [];
+      payload = {
+        question_id: questionId,
+        selected_answer_ids: selectedIds,
+        text_answer: null,
+      };
+    }
 
-//       {/* Show Questions */}
-//       {questions.length > 0 && (
-//         <div className="bg-white shadow rounded-lg p-6">
-//           <h2 className="text-lg font-semibold mb-4">
-//             Questions ({questions.length} found)
-//           </h2>
+    const res = await fetch(`${url}/sp-questions/user/submit-answer`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
-//           <div className="bg-gray-50 p-4 rounded-lg">
-//             <h3 className="font-medium mb-2">
-//               Question {currentIndex + 1} of {questions.length}
-//             </h3>
-//             <p className="text-gray-700 mb-4">
-//               {questions[currentIndex]?.question ||
-//                 questions[currentIndex]?.text ||
-//                 questions[currentIndex]?.questionText ||
-//                 "Question text not available"}
-//             </p>
+    if (!res.ok) {
+      const errData = await res.json();
+      console.error("Submit failed response:", errData);
+      throw new Error(`Failed submit: ${res.status}`);
+    }
 
-//             {/* Show options */}
-//             {questions[currentIndex]?.options && (
-//               <div className="space-y-2">
-//                 {questions[currentIndex].options.map((option, i) => (
-//                   <div key={i} className="p-2 bg-white rounded border">
-//                     <span className="text-sm">{option}</span>
-//                   </div>
-//                 ))}
-//               </div>
-//             )}
+    const data = await res.json();
+    setResults((prev) => ({ ...prev, [questionId]: data }));
+  } catch (err) {
+    console.error("Error submitting answer:", err);
+  }
+};
 
-//             <div className="flex gap-2 mt-4">
-//               <button
-//                 onClick={prevQuestion}
-//                 disabled={currentIndex === 0}
-//                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
-//               >
-//                 Previous
-//               </button>
-//               <button
-//                 onClick={nextQuestion}
-//                 disabled={currentIndex === questions.length - 1}
-//                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
-//               >
-//                 Next
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
 
-// export default SmartPracticePage;
- 
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">Smart Practice</h1>
+
+        {/* Course Selection */}
+        <div className="mb-6 space-y-4">
+          {/* Select Course */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Select Course</label>
+            <select
+              className="w-full border p-2 rounded"
+              value={selectedCourse || ""}
+              onChange={(e) => setSelectedCourse(e.target.value)}
+            >
+              {loadingCourses ? (
+                <option>Loading...</option>
+              ) : (
+                courses.map((c) => (
+                  <option key={c.course_id || c.id} value={c.course_id || c.id}>
+                    {c.course_name || c.title || "Unnamed Course"}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+
+          {/* Select Category */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Select Category</label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => toggleCategory("All")}
+                className={`px-3 py-1 rounded border ${
+                  courseCategories.includes("All") ? "bg-blue-600 text-white" : ""
+                }`}
+              >
+                All
+              </button>
+              {loadingCategories ? (
+                <span>Loading...</span>
+              ) : (
+                categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => toggleCategory(cat.name)}
+                    className={`px-3 py-1 rounded border ${
+                      courseCategories.includes(cat.name)
+                        ? "bg-blue-600 text-white"
+                        : ""
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Question Type */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Question Type</label>
+            <select
+              className="w-full border p-2 rounded"
+              value={questionType}
+              onChange={(e) => setQuestionType(e.target.value)}
+            >
+              {questionTypes.map((qt) => (
+                <option key={qt} value={qt}>
+                  {qt}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Difficulty */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Difficulty</label>
+            <select
+              className="w-full border p-2 rounded"
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value)}
+            >
+              {difficulties.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Start Practice button */}
+        <button
+          onClick={startPractice}
+          className="w-full bg-blue-600 text-white py-3 rounded-xl shadow hover:bg-blue-700"
+        >
+          Start Practice
+        </button>
+
+        {/* Questions */}
+        {questions.length > 0 && (
+          <div className="mt-6 space-y-6">
+            {questions.map((q) => (
+              <div key={q.id} className="p-6 bg-white rounded-xl shadow">
+                <h3 className="font-semibold text-lg mb-4">{q.question}</h3>
+
+                {/* Render answers depending on question type */}
+{q.question_type === "fill_gap" ? (
+  // Fill in the gap → text input
+  <input
+    type="text"
+    placeholder="Type your answer..."
+    value={answers[q.id] || ""}
+    onChange={(e) =>
+      setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+    }
+    className="w-full border p-2 rounded"
+  />
+) : (
+  // Multiple choice → radio buttons
+  <div className="space-y-2">
+    {q.answers.map((a) => (
+      <label key={a.id} className="flex items-center space-x-2">
+        <input
+          type="radio"
+          name={`q-${q.id}`}
+          value={a.id}
+          checked={answers[q.id] === a.id}
+          onChange={() =>
+            setAnswers((prev) => ({ ...prev, [q.id]: a.id }))
+          }
+        />
+        <span>{a.answer}</span>
+      </label>
+    ))}
+  </div>
+)}
+
+
+                {/* Submit button */}
+                <button
+                  onClick={() => submitAnswer(q.id)}
+                  className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Submit Answer
+                </button>
+
+                {/* Show result */}
+                {results[q.id] && (
+                  <div className="mt-3 p-3 rounded bg-gray-100">
+                    <p>
+                      {results[q.id].is_correct
+                        ? "✅ Correct!"
+                        : "❌ Wrong answer"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {results[q.id].reason}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+>>>>>>> f52c74db47bebd2f909403e7389eede5a2b6f559
 

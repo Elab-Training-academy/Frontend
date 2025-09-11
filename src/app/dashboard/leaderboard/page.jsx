@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 const Leaderboard = () => {
-  const [activeTab, setActiveTab] = useState("Weekly");
+  const [activeTab, setActiveTab] = useState("Daily");
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -196,7 +196,7 @@ const Leaderboard = () => {
           <span className="text-gray-700 font-medium w-full sm:w-auto">
             Report Type:
           </span>
-          {["Weekly", "Monthly", "Yearly"].map((tab) => (
+          {["Daily","Weekly", "Monthly"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}

@@ -79,7 +79,7 @@ const CourseModulesPage = () => {
             {modules.map((module) => (
               <Link
                 key={module.id}
-                href={`/dashboard/my-courses/${id}/modules/${module.id}/schedule`}
+                href={`/dashboard/my-courses/${id}/schedule/${module.id}`}
               >
                 <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-2xl shadow hover:shadow-lg transition transform hover:-translate-y-1 cursor-pointer">
                   <div className="flex items-center mb-3">
